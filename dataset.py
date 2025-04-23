@@ -41,17 +41,19 @@ class CustomTransform:
         return (formatted_question, sample['label'])
     
 # get the pytorch dataset as a generator in order to make a huggingface dataset with it
-def get_huggingface_dataset(train = True, sp=True, root_dir="./data/"):
+def get_huggingface_dataset(sp=True, root_dir="./data/"):
     dataset = "SP" if sp else "WP"
-    if train:
-        data = np.load(root_dir+dataset+"-train.npy", allow_pickle=True)
-    else:
-        data = np.load(root_dir+dataset+"_eval_data_for_practice.npy", allow_pickle=True)
-        
+    data = np.load(root_dir+dataset+"-train.npy", allow_pickle=True)
     def data_gen(data):
         # you need to manually set the type of all features or errors happen
         for i in range(0, len(data)):
+            # Apply transformation logic
+            formatted_question = '[CLS] ' + data[i]['question']
+            for j in range(4):
+                formatted_question += ' [SEP] ' + data[i]['choice_list'][j]
+
             yield {
+                'formatted_question': str(formatted_question),
                 'id': str(data[i]['id']),
                 'question': str(data[i]['question']),
                 'label': str(data[i]['label']),
@@ -68,4 +70,5 @@ if __name__ == "__main__":
     # print(len(ds))
     # print(ds[0])
 
-    huggingface_dataset = get_huggingface_dataset()
+    huggingface_dataset = get_huggingface_dataset(train=True, sp=False)
+    print(huggingface_dataset[0])
