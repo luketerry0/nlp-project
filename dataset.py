@@ -3,29 +3,26 @@ This file contains a custom torch dataset which we can use to load the data
 """
 
 import torch
-from torch.utils.data import Dataset
+import torch.utils.data
 import numpy as np
 from datasets import Dataset
 
-class RiddleDataset(Dataset):
+class RiddleDataset(torch.utils.data.Dataset):
     """Dataset for the problem set"""
 
-    def __init__(self, sp=True, train=True, root_dir="./data/", transform=None):
+    def __init__(self, sp=True, root_dir="./data/", transform=None):
         dataset = "SP" if sp else "WP"
-        if train:
-            self.data = np.load(root_dir+dataset+"-train.npy", allow_pickle=True)
-        else:
-            self.data = np.load(root_dir+dataset+"_eval_data_for_practice.npy", allow_pickle=True)
+        self.d = np.load(root_dir+dataset+"-train.npy", allow_pickle=True)
         self.transform = transform
 
     def __len__(self):
-        return self.data.shape[0]
+        return self.d.shape[0]
 
     def __getitem__(self, idx):
         if self.transform:
-            sample = self.transform(self.data[idx])
+            sample = self.transform(self.d[idx])
         else:
-            sample = self.data[idx]
+            sample = self.d[idx]
         return sample
 
 class CustomTransform:
@@ -66,9 +63,12 @@ def get_huggingface_dataset(sp=True, root_dir="./data/"):
     
 
 if __name__ == "__main__":
-    # ds = RiddleDataset(transform=CustomTransform())
-    # print(len(ds))
-    # print(ds[0])
+    ds = RiddleDataset(transform=CustomTransform())
+    print(len(ds))
+    print(ds[0])
+    dl = torch.utils.data.DataLoader(ds)
+    for i in dl:
+        print(i)
 
-    huggingface_dataset = get_huggingface_dataset(train=True, sp=False)
-    print(huggingface_dataset[0])
+    # huggingface_dataset = get_huggingface_dataset(train=True, sp=False)
+    # print(huggingface_dataset[0])
