@@ -43,11 +43,11 @@ def main(args):
                 )
 
             # code to use a subset of the data (for local testing)
-            # indices = np.random.choice(len(self.train_set), 10, replace=False)
-            # self.train_subset = Subset(self.train_set, indices)
+            indices = np.random.choice(len(self.train_set), 10, replace=False)
+            self.train_subset = Subset(self.train_set, indices)
 
 
-            self.train_loader = DataLoader(self.train_set, shuffle=True, batch_size=args.batch_size)
+            self.train_loader = DataLoader(self.train_subset, shuffle=True, batch_size=args.batch_size)
             self.test_loader = DataLoader(self.test_set, shuffle=True, batch_size=args.batch_size)
             self.dense_layer = torch.nn.Linear(768*4, 4).to(self.device)
             self.softmax = nn.Softmax().to(self.device)
@@ -75,12 +75,17 @@ def main(args):
                         ]
 
                     # forward pass
-                    outputs = self(torch.cat(bert_questions))
-                    correct_output = torch.zeros(4)
+                    inp = torch.cat(bert_questions).to(self.device)
+                    outputs = self(inp)
+                    correct_output = torch.zeros(4).cpu()
                     correct_output[labels] = 1
 
-                    y_pred.append(int(np.argmax(outputs.detach())))
+                    y_pred.append(int(np.argmax(outputs.detach().cpu())))
                     y_true.append(int(np.argmax(correct_output)))
+
+                    del inp
+                    del outputs
+                    del correct_output
         
             report = classification_report(y_true, y_pred, output_dict=True)
             matrix = confusion_matrix(y_true, y_pred)
