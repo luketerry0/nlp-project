@@ -25,17 +25,6 @@ class RiddleDataset(torch.utils.data.Dataset):
             sample = self.d[idx]
         return sample
 
-class CustomTransform:
-    def __init__(self):
-        pass
-
-    def __call__(self, sample):
-        # Apply transformation logic
-        formatted_question = '[CLS] ' + sample['question']
-        for i in range(4):
-            formatted_question += ' [SEP] ' + sample['choice_list'][i]
-
-        return (formatted_question, sample['label'])
     
 # get the pytorch dataset as a generator in order to make a huggingface dataset with it
 def get_huggingface_dataset(sp=True, root_dir="./data/"):
