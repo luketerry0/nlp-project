@@ -35,6 +35,7 @@ def main(args):
             self.bert_model = AutoModel.from_pretrained(MODEL_NAME)
             self.tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
             self.full_dataset = RiddleDataset(transform=RiddleSolverTransform())
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             test_proportion = 0.1
             self.train_set, self.test_set = torch.utils.data.random_split(
                 self.full_dataset, 
@@ -42,14 +43,14 @@ def main(args):
                 )
 
             # code to use a subset of the data (for local testing)
-            indices = np.random.choice(len(self.train_set), 10, replace=False)
-            self.train_subset = Subset(self.train_set, indices)
+            # indices = np.random.choice(len(self.train_set), 10, replace=False)
+            # self.train_subset = Subset(self.train_set, indices)
 
 
-            self.train_loader = DataLoader(self.train_subset, shuffle=True, batch_size=args.batch_size)
+            self.train_loader = DataLoader(self.train_set, shuffle=True, batch_size=args.batch_size)
             self.test_loader = DataLoader(self.test_set, shuffle=True, batch_size=args.batch_size)
-            self.dense_layer = torch.nn.Linear(768*4, 4)
-            self.softmax = nn.Softmax()
+            self.dense_layer = torch.nn.Linear(768*4, 4).to(self.device)
+            self.softmax = nn.Softmax().to(self.device)
             self.criterion = nn.CrossEntropyLoss()
             self.optimizer = optim.SGD(self.parameters(), lr=args.learning_rate, momentum=0.9)        # print(bert_model)
             # print(self.bert_model(**self.tokenizer(self.dataset[0]['formatted_question'], return_tensors="pt")))
@@ -105,15 +106,17 @@ def main(args):
                     self.optimizer.zero_grad()
 
                     # forward + backward + optimize
-                    outputs = self(torch.cat(bert_questions))
-                    correct_output = torch.zeros(4)
+                    inp = torch.cat(bert_questions).to(self.device)
+                    outputs = self(inp)
+                    correct_output = torch.zeros(4).to(self.device)
                     correct_output[labels] = 1
                     loss = self.criterion(outputs, correct_output)
                     loss.backward()
                     self.optimizer.step()
+                    del inp
+                    del outputs
 
                 self.evaluate(epoch)
-
 
                 print('Finished Training')
 
@@ -134,7 +137,7 @@ if __name__ == "__main__":
     # Set the wandb entity where your project will be logged (generally your team name).
     entity="luketerry0-university-of-oklahoma",
     # Set the wandb project where this run will be logged.
-    project="deberta-project-local-test",
+    project="deberta-project-gpu-test",
     # Track hyperparameters and run metadata.
     config=args,
     )
