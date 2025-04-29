@@ -10,9 +10,12 @@ from datasets import Dataset
 class RiddleDataset(torch.utils.data.Dataset):
     """Dataset for the problem set"""
 
-    def __init__(self, sp=True, root_dir="./data/", transform=None):
-        dataset = "SP" if sp else "WP"
-        self.d = np.load(root_dir+dataset+"-train.npy", allow_pickle=True)
+    def __init__(self, sp=True, root_dir="./data/", transform=None,):
+        if sp:
+            self.d = np.load(root_dir+"sentence_puzzle.npy", allow_pickle=True)
+        else:
+            self.d = np.load(root_dir+"word_puzzle.npy", allow_pickle=True)
+
         self.transform = transform
 
     def __len__(self):
@@ -29,7 +32,7 @@ class RiddleDataset(torch.utils.data.Dataset):
 # get the pytorch dataset as a generator in order to make a huggingface dataset with it
 def get_huggingface_dataset(sp=True, root_dir="./data/"):
     dataset = "SP" if sp else "WP"
-    data = np.load(root_dir+dataset+"-train.npy", allow_pickle=True)
+    data = np.load(root_dir+dataset+"_train.npy", allow_pickle=True)
     def data_gen(data):
         # you need to manually set the type of all features or errors happen
         for i in range(0, len(data)):
