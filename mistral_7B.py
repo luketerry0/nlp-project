@@ -2,7 +2,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers import BitsAndBytesConfig
 import torch
 import numpy as np
-from sklearn.metrics import Classification_report
+from sklearn.metrics import classification_report
 import re
 
 device = "cuda" # the device to load the model onto
