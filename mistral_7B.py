@@ -2,6 +2,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from transformers import BitsAndBytesConfig
 import torch
 import numpy as np
+from sklearn.metrics import Classification_report
 import re
 
 device = "cuda" # the device to load the model onto
@@ -16,6 +17,7 @@ word_data = np.load("data/word_puzzle.npy", allow_pickle=True)
 
 correct_guesses = 0
 guesses = []
+labels = []
 
 for entry in sentence_data:
     question = f"""Answer the following question by selecting the correct option number 0-3. The following question is a trick question, so carefully consider your answer and explain your reasoning.
@@ -31,6 +33,7 @@ for entry in sentence_data:
     encodeds = tokenizer(question, return_tensors="pt").to(device)
     generated_ids = model.generate(input_ids=encodeds['input_ids'], attention_mask=encodeds['attention_mask'], max_new_tokens=300, do_sample=True)
     decoded = tokenizer.batch_decode(generated_ids)
+    labels.append(entry['label'])
 
     match = re.search(r'\d+(?!.*\d)', decoded[0], re.DOTALL)
     if match:
@@ -45,9 +48,5 @@ for entry in sentence_data:
         guesses.append(-1)
         print(-1)
 
-acc = correct_guesses / len(sentence_data)
-
-print("Total correct guesses:\n")
-print(correct_guesses)
-print(acc)
+print(Classification_report(labels, guesses))
 
