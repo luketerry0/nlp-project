@@ -48,5 +48,5 @@ for entry in sentence_data:
         guesses.append(-1)
         print(-1)
 
-print(Classification_report(labels, guesses))
+print(classification_report(labels, guesses))
 
